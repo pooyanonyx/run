@@ -559,10 +559,12 @@
         swReadyPromise = navigator.serviceWorker.register('sw.js')
             .then(reg => {
                 swRegistration = reg;
+                setTimeout(() => debugLog('ثبت Service Worker موفق بود | state=' + (reg.active ? 'active' : (reg.installing ? 'installing' : (reg.waiting ? 'waiting' : 'نامشخص')))), 0);
                 return reg;
             })
             .catch(err => {
                 console.warn('ثبت service worker ناموفق بود:', err);
+                setTimeout(() => debugLog('ثبت Service Worker ناموفق بود: ' + (err && err.message ? err.message : err)), 0);
                 return null;
             });
     }
@@ -600,23 +602,55 @@
         Notification.requestPermission().then(permission => {
             notificationPermission = permission;
             updateNotifStatus();
+            debugLog('نتیجه درخواست مجوز: ' + permission);
             if (permission === 'granted') {
-                try {
-                    new Notification('✅ اعلان فعال شد!', { body: 'تایمر شما آماده است.', icon: ICON_SVG });
-                } catch (e) {}
+                swReadyPromise.then(reg => {
+                    if (reg) {
+                        reg.showNotification('✅ اعلان فعال شد!', { body: 'تایمر شما آماده است.', icon: ICON_SVG })
+                            .then(() => debugLog('نوتیفیکیشن تست از طریق SW موفق بود'))
+                            .catch(err => debugLog('نوتیفیکیشن تست از طریق SW شکست خورد: ' + (err && err.message ? err.message : err)));
+                    } else {
+                        try {
+                            new Notification('✅ اعلان فعال شد!', { body: 'تایمر شما آماده است.', icon: ICON_SVG });
+                            debugLog('نوتیفیکیشن تست از طریق new Notification موفق بود');
+                        } catch (e) {
+                            debugLog('نوتیفیکیشن تست شکست خورد: ' + (e && e.message ? e.message : e));
+                        }
+                    }
+                });
             }
         });
+    }
+
+    // ---------- پنل دیباگ روی صفحه (چون دسترسی به کنسول روی موبایل سخته) ----------
+    function debugLog(msg) {
+        console.log('[NOTIF-DEBUG]', msg);
+        let panel = document.getElementById('debugPanel');
+        if (!panel) {
+            panel = document.createElement('div');
+            panel.id = 'debugPanel';
+            panel.style.cssText = 'position:fixed;bottom:0;left:0;right:0;max-height:35vh;overflow-y:auto;background:rgba(0,0,0,0.85);color:#7fffb0;font-size:12px;font-family:monospace;padding:8px;z-index:99999;direction:ltr;text-align:left;white-space:pre-wrap;';
+            document.body.appendChild(panel);
+        }
+        const line = document.createElement('div');
+        line.textContent = new Date().toLocaleTimeString() + ' | ' + msg;
+        panel.appendChild(line);
+        panel.scrollTop = panel.scrollHeight;
     }
 
     function fallbackNotify(title, options) {
         try {
             const n = new Notification(title, options);
+            debugLog('fallbackNotify: new Notification() موفق بود برای "' + title + '"');
             setTimeout(() => n.close(), 8000);
-        } catch (e) { /* برخی مرورگرهای موبایل بدون سرویس‌ورکر اجازه نمی‌دهند */ }
+        } catch (e) {
+            debugLog('fallbackNotify شکست خورد: ' + (e && e.message ? e.message : e));
+        }
     }
 
     function sendNotification(title, body, tag) {
-        if (notificationPermission !== 'granted') return;
+        debugLog('sendNotification فراخوانی شد: "' + title + '" | permission=' + notificationPermission + ' | swRegistration=' + (swRegistration ? 'دارد' : 'ندارد'));
+        if (notificationPermission !== 'granted') { debugLog('متوقف شد: مجوز granted نیست'); return; }
         const options = {
             body: body,
             icon: ICON_SVG,
@@ -629,16 +663,29 @@
 
         if (swRegistration) {
             // ثبت قبلاً کامل شده؛ مستقیم استفاده کن
-            swRegistration.showNotification(title, options).catch(() => fallbackNotify(title, options));
+            swRegistration.showNotification(title, options)
+                .then(() => debugLog('showNotification موفق بود (از طریق swRegistration)'))
+                .catch((err) => {
+                    debugLog('showNotification شکست خورد: ' + (err && err.message ? err.message : err));
+                    fallbackNotify(title, options);
+                });
         } else {
             // ممکن است ثبت هنوز کامل نشده باشد؛ منتظر همان Promise ثبت بمان (نه navigator.serviceWorker.ready
             // که در صورت شکست ثبت، هرگز resolve نمی‌شود و باعث می‌شد اعلان اصلاً نمایش داده نشود)
+            debugLog('swRegistration هنوز آماده نیست، منتظر swReadyPromise...');
             swReadyPromise
                 .then(reg => {
-                    if (reg) return reg.showNotification(title, options);
+                    if (reg) {
+                        return reg.showNotification(title, options)
+                            .then(() => debugLog('showNotification موفق بود (از طریق swReadyPromise)'));
+                    }
+                    debugLog('swReadyPromise مقدار null داد (ثبت ناموفق)، از fallback استفاده می‌شود');
                     return fallbackNotify(title, options);
                 })
-                .catch(() => fallbackNotify(title, options));
+                .catch((err) => {
+                    debugLog('خطا در showNotification از طریق swReadyPromise: ' + (err && err.message ? err.message : err));
+                    fallbackNotify(title, options);
+                });
         }
 
         if (state.settings.vibrateOn && navigator.vibrate) {
