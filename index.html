@@ -546,6 +546,26 @@
 
     // ---------- وضعیت اعلان ----------
     let notificationPermission = ('Notification' in window) ? Notification.permission : 'unsupported';
+    let swRegistration = null;
+    // به‌جای اتکا به navigator.serviceWorker.ready (که اگر ثبت ناموفق باشد تا ابد در حالت pending می‌ماند)
+    // یک Promise واحد نگه می‌داریم که همیشه resolve می‌شود (حتی روی خطا با مقدار null)
+    let swReadyPromise = Promise.resolve(null);
+
+    if (!('serviceWorker' in navigator)) {
+        console.warn('این مرورگر/بستر از Service Worker پشتیبانی نمی‌کند (مثلاً باز کردن فایل با file:// یا مرورگر قدیمی). اعلان‌های پس‌زمینه کار نخواهند کرد.');
+    } else if (!window.isSecureContext) {
+        console.warn('صفحه در یک context امن (https یا localhost) اجرا نمی‌شود؛ Service Worker ثبت نخواهد شد.');
+    } else {
+        swReadyPromise = navigator.serviceWorker.register('sw.js')
+            .then(reg => {
+                swRegistration = reg;
+                return reg;
+            })
+            .catch(err => {
+                console.warn('ثبت service worker ناموفق بود:', err);
+                return null;
+            });
+    }
 
     function updateNotifStatus() {
         if (notificationPermission === 'granted') {
@@ -588,21 +608,39 @@
         });
     }
 
-    function sendNotification(title, body, tag) {
-        if (notificationPermission !== 'granted') return;
+    function fallbackNotify(title, options) {
         try {
-            const options = {
-                body: body,
-                icon: ICON_SVG,
-                badge: ICON_SVG,
-                silent: false,
-                vibrate: state.settings.vibrateOn ? [200, 100, 200] : [],
-                requireInteraction: false
-            };
-            if (tag) options.tag = tag;
             const n = new Notification(title, options);
             setTimeout(() => n.close(), 8000);
-        } catch (e) {}
+        } catch (e) { /* برخی مرورگرهای موبایل بدون سرویس‌ورکر اجازه نمی‌دهند */ }
+    }
+
+    function sendNotification(title, body, tag) {
+        if (notificationPermission !== 'granted') return;
+        const options = {
+            body: body,
+            icon: ICON_SVG,
+            badge: ICON_SVG,
+            silent: false,
+            vibrate: state.settings.vibrateOn ? [200, 100, 200] : [],
+            requireInteraction: false
+        };
+        if (tag) { options.tag = tag; options.renotify = true; }
+
+        if (swRegistration) {
+            // ثبت قبلاً کامل شده؛ مستقیم استفاده کن
+            swRegistration.showNotification(title, options).catch(() => fallbackNotify(title, options));
+        } else {
+            // ممکن است ثبت هنوز کامل نشده باشد؛ منتظر همان Promise ثبت بمان (نه navigator.serviceWorker.ready
+            // که در صورت شکست ثبت، هرگز resolve نمی‌شود و باعث می‌شد اعلان اصلاً نمایش داده نشود)
+            swReadyPromise
+                .then(reg => {
+                    if (reg) return reg.showNotification(title, options);
+                    return fallbackNotify(title, options);
+                })
+                .catch(() => fallbackNotify(title, options));
+        }
+
         if (state.settings.vibrateOn && navigator.vibrate) {
             try { navigator.vibrate([120, 60, 120]); } catch (e) {}
         }
