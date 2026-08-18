@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>تایمر هوشمند دویدن و راه رفتن</title>
+    <meta name="theme-color" content="#0b2b3b">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="تایمر اینتروال">
+    <link id="manifestLink" rel="manifest" href="">
+    <link id="iconLink" rel="icon" href="">
+    <link id="appleIconLink" rel="apple-touch-icon" href="">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            min-height: 100vh;
+            background: linear-gradient(145deg, #0b2b3b 0%, #1a4a5f 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 56px;
+            padding: 40px 35px;
+            max-width: 700px;
+            width: 100%;
+            box-shadow: 0 30px 50px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.06);
+            transition: 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        h1 {
+            text-align: center;
+            font-weight: 600;
+            font-size: 2rem;
+            letter-spacing: 1px;
+            color: #f2f9ff;
+            text-shadow: 0 4px 12px rgba(0, 20, 30, 0.5);
+            margin-bottom: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .grid-2col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        .input-group {
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 28px;
+            padding: 16px 18px 18px;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: 0.2s;
+        }
+        .input-group:focus-within {
+            border-color: #7fc9ff;
+            box-shadow: 0 0 0 3px rgba(90, 200, 255, 0.2);
+        }
+        .input-group label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #bfdfff;
+            margin-bottom: 8px;
+            letter-spacing: 0.3px;
+        }
+        .input-group .time-input {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .input-group input[type="number"] {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 40px;
+            border: none;
+            background: rgba(255, 255, 255, 0.08);
+            color: #f0fcff;
+            font-size: 1.2rem;
+            font-weight: 500;
+            outline: none;
+            transition: 0.2s;
+            text-align: center;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .input-group input[type="number"]:focus {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: #7fc9ff;
+        }
+        .unit {
+            color: #b0d8ff;
+            font-weight: 300;
+            font-size: 1rem;
+            margin-right: 4px;
+        }
+        .laps-group {
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 28px;
+            padding: 16px 18px 18px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .laps-group label {
+            color: #bfdfff;
+            font-weight: 500;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .laps-group .laps-input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .laps-group input {
+            width: 80px;
+            padding: 10px 8px;
+            border-radius: 40px;
+            border: none;
+            background: rgba(255, 255, 255, 0.08);
+            color: #f0fcff;
+            font-size: 1.3rem;
+            font-weight: 600;
+            text-align: center;
+            outline: none;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .laps-group input:focus {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: #7fc9ff;
+        }
+        .laps-group .hint {
+            width: 100%;
+            text-align: center;
+            font-size: 0.78rem;
+            color: #7fa6c4;
+        }
+        .btn-add-lap {
+            background: #2e9a6e;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.25s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(46, 154, 110, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .btn-add-lap:hover {
+            background: #3db87f;
+            transform: scale(1.05);
+        }
+        .btn-add-lap:active { transform: scale(0.95); }
+        .btn-add-lap:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .progress-section { margin-bottom: 18px; }
+        .progress-bar-track {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 30px;
+            height: 14px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00a3e0, #2e9a6e);
+            border-radius: 30px;
+            width: 0%;
+            transition: width 0.4s ease;
+        }
+        .progress-meta {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            font-size: 0.85rem;
+            color: #8fbad6;
+        }
+        .progress-meta .value { color: #e3f4ff; font-weight: 600; }
+        .display-timer {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 80px;
+            padding: 20px 20px;
+            margin: 15px 0 20px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(4px);
+        }
+        .timer-digits {
+            font-size: 4.2rem;
+            font-weight: 700;
+            letter-spacing: 4px;
+            color: #e6f7ff;
+            text-shadow: 0 0 20px rgba(0, 180, 255, 0.3);
+            font-variant-numeric: tabular-nums;
+        }
+        .phase-badge {
+            font-size: 1.1rem;
+            background: rgba(0, 0, 0, 0.3);
+            display: inline-block;
+            padding: 6px 22px;
+            border-radius: 40px;
+            color: #b0e5ff;
+            margin-top: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(4px);
+        }
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 14px;
+            margin: 18px 0 12px;
+        }
+        .btn {
+            padding: 14px 34px;
+            border: none;
+            border-radius: 60px;
+            font-weight: 600;
+            font-size: 1rem;
+            background: rgba(255, 255, 255, 0.06);
+            color: #d6edff;
+            backdrop-filter: blur(6px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            cursor: pointer;
+            transition: 0.25s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.2);
+            flex: 1 0 auto;
+            justify-content: center;
+        }
+        .btn-primary { background: #00a3e0; color: #fff; border-color: #6bcaff; }
+        .btn-success { background: #2e9a6e; color: white; border-color: #5fcba0; }
+        .btn-success:hover { background: #3db87f; transform: scale(1.02); }
+        .btn-danger { background: #bc3f4a; color: white; border-color: #e07a85; }
+        .btn-danger:hover { background: #d14f5a; transform: scale(1.02); }
+        .btn-warning { background: #b8863a; color: white; border-color: #e0b06a; }
+        .btn-warning:hover { background: #cf9a47; transform: scale(1.02); }
+        .btn:disabled {
+            opacity: 0.4;
+            transform: none;
+            pointer-events: none;
+            filter: grayscale(0.5);
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 40px;
+            padding: 14px 24px;
+            margin: 18px 0 0;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            color: #cce3f0;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .info-row span { display: flex; align-items: center; gap: 8px; }
+        .info-row .label { color: #8fbad6; font-weight: 300; }
+        .info-row .value {
+            font-weight: 600;
+            color: #e3f4ff;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 2px 14px;
+            border-radius: 40px;
+        }
+        .timer-warning {
+            color: #ffcc66 !important;
+            text-shadow: 0 0 30px rgba(255, 200, 50, 0.5) !important;
+            animation: pulse 0.5s ease-in-out infinite alternate;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0.6; transform: scale(0.98); }
+        }
+        .notification-section {
+            margin-top: 15px;
+            padding: 12px 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+        .notification-section .notif-info { color: #bfdfff; font-size: 0.9rem; display: flex; align-items: center; gap: 8px; }
+        .notification-section .notif-status { font-weight: 600; padding: 2px 12px; border-radius: 20px; font-size: 0.85rem; }
+        .notif-status.granted { color: #5fcba0; background: rgba(46, 154, 110, 0.2); }
+        .notif-status.denied { color: #e07a85; background: rgba(188, 63, 74, 0.2); }
+        .notif-status.default { color: #e0b06a; background: rgba(184, 134, 58, 0.2); }
+        .btn-notif {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #d6edff;
+            padding: 8px 20px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: 0.25s;
+        }
+        .btn-notif:hover { background: rgba(255, 255, 255, 0.15); }
+        .settings-section {
+            margin-top: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 28px;
+            padding: 4px 20px 6px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+        .settings-section summary {
+            cursor: pointer;
+            padding: 14px 0;
+            color: #bfdfff;
+            font-weight: 600;
+            font-size: 0.95rem;
+            list-style: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .settings-section summary::-webkit-details-marker { display: none; }
+        .settings-section summary::after { content: '▾'; transition: 0.25s; color: #7fa6c4; }
+        .settings-section[open] summary::after { transform: rotate(180deg); }
+        .setting-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 11px 2px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            color: #d6edff;
+            font-size: 0.9rem;
+            gap: 10px;
+        }
+        .setting-row .desc { color: #7fa6c4; font-size: 0.78rem; display: block; margin-top: 2px; }
+        .switch { position: relative; display: inline-block; width: 46px; height: 26px; flex-shrink: 0; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer; inset: 0;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 30px;
+            transition: 0.25s;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .slider::before {
+            content: '';
+            position: absolute;
+            height: 20px; width: 20px;
+            left: 3px; bottom: 2px;
+            background: #e6f7ff;
+            border-radius: 50%;
+            transition: 0.25s;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        input:checked + .slider { background: #00a3e0; }
+        input:checked + .slider::before { transform: translateX(20px); }
+        .keepawake-note {
+            font-size: 0.75rem;
+            color: #7fa6c4;
+            text-align: center;
+            margin-top: 10px;
+            line-height: 1.6;
+        }
+        @media (max-width: 550px) {
+            .card { padding: 24px 18px; }
+            .grid-2col { grid-template-columns: 1fr; }
+            .timer-digits { font-size: 3rem; }
+            .actions .btn { flex: 1 1 100%; }
+            .notification-section { flex-direction: column; align-items: stretch; text-align: center; }
+            .notification-section .notif-info { justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+<div class="card">
+    <h1><span>🏃‍♂️ تایمر اینتروال</span></h1>
+
+    <div class="grid-2col">
+        <div class="input-group">
+            <label>🚶 زمان راه رفتن (ثانیه)</label>
+            <div class="time-input">
+                <input type="number" id="walkTime" value="30" min="1" step="1">
+                <span class="unit">ثانیه</span>
+            </div>
+        </div>
+        <div class="input-group">
+            <label>🏃 زمان دویدن (ثانیه)</label>
+            <div class="time-input">
+                <input type="number" id="runTime" value="20" min="1" step="1">
+                <span class="unit">ثانیه</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="laps-group">
+        <label>🔁 تعداد دورها</label>
+        <div class="laps-input-wrapper">
+            <input type="number" id="lapsCount" value="3" min="1" step="1">
+            <button class="btn-add-lap" id="addLapBtn" title="افزودن یک دور">➕</button>
+        </div>
+        <span class="hint">می‌توانید حین اجرا هم دور اضافه کنید</span>
+    </div>
+
+    <div class="progress-section">
+        <div class="progress-bar-track"><div class="progress-bar-fill" id="progressFill"></div></div>
+        <div class="progress-meta">
+            <span>پیشرفت کلی: <span class="value" id="progressPercent">۰٪</span></span>
+            <span>زمان باقیمانده کل: <span class="value" id="totalRemaining">۰۰:۰۰</span></span>
+        </div>
+    </div>
+
+    <div class="display-timer">
+        <div class="timer-digits" id="timerDisplay">00:00</div>
+        <div class="phase-badge" id="phaseDisplay">⏸ آماده</div>
+    </div>
+
+    <div class="actions">
+        <button class="btn btn-success" id="startBtn">▶ شروع</button>
+        <button class="btn btn-warning" id="pauseBtn">⏸ توقف</button>
+        <button class="btn btn-danger" id="resetBtn">⏹ ریست</button>
+    </div>
+
+    <div class="info-row">
+        <span><span class="label">دور جاری</span> <span class="value" id="currentLapDisplay">0</span></span>
+        <span><span class="label">مرحله</span> <span class="value" id="currentPhaseDisplay">-</span></span>
+        <span><span class="label">وضعیت</span> <span class="value" id="statusDisplay">⏸ متوقف</span></span>
+    </div>
+
+    <details class="settings-section">
+        <summary>⚙️ تنظیمات و اپشن‌ها</summary>
+        <div class="setting-row">
+            <span>🔊 صدا<span class="desc">پخش صدا برای همه رویدادها</span></span>
+            <label class="switch"><input type="checkbox" id="soundToggle"><span class="slider"></span></label>
+        </div>
+        <div class="setting-row">
+            <span>⏱ صدای نیمه راه<span class="desc">هشدار وقتی ۵۰٪ هر مرحله گذشت</span></span>
+            <label class="switch"><input type="checkbox" id="halfToggle"><span class="slider"></span></label>
+        </div>
+        <div class="setting-row">
+            <span>⏱ صدای سه‌چهارم راه<span class="desc">هشدار وقتی ۷۵٪ هر مرحله گذشت</span></span>
+            <label class="switch"><input type="checkbox" id="threeQuarterToggle"><span class="slider"></span></label>
+        </div>
+        <div class="setting-row">
+            <span>📳 لرزش<span class="desc">لرزش گوشی هنگام هشدارها</span></span>
+            <label class="switch"><input type="checkbox" id="vibrateToggle"><span class="slider"></span></label>
+        </div>
+        <div class="setting-row">
+            <span>🔆 روشن ماندن صفحه<span class="desc">جلوگیری از خاموش شدن صفحه حین اجرا</span></span>
+            <label class="switch"><input type="checkbox" id="wakeToggle"><span class="slider"></span></label>
+        </div>
+        <p class="keepawake-note">برای بهترین عملکرد در پس‌زمینه، اعلان‌ها را فعال کنید و صفحه را باز نگه دارید؛ مرورگرها وقتی صفحه کاملاً بسته یا قفل شود، اجرای جاوااسکریپت را متوقف می‌کنند.</p>
+    </details>
+
+    <div class="notification-section" id="installSection" style="display:none;">
+        <div class="notif-info">
+            <span>📲 نصب برنامه</span>
+            <span class="notif-status default">افزودن آیکون به صفحه اصلی</span>
+        </div>
+        <button class="btn-notif" id="installBtn">افزودن به صفحه اصلی</button>
+    </div>
+
+    <div class="notification-section">
+        <div class="notif-info">
+            <span>🔔 اعلان‌ها</span>
+            <span class="notif-status default" id="notifStatus">غیرفعال</span>
+        </div>
+        <button class="btn-notif" id="notifPermissionBtn">فعال کردن اعلان</button>
+    </div>
+</div>
+<script>
+(function () {
+    // ---------- آیکون مشترک ----------
+    const ICON_SVG = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"%3E%3Ccircle cx="50" cy="50" r="45" fill="%2300a3e0"/%3E%3Ctext x="50" y="65" font-size="40" text-anchor="middle" fill="white"%3E%F0%9F%8F%83%3C/text%3E%3C/svg%3E';
+    document.getElementById('iconLink').setAttribute('href', ICON_SVG);
+    document.getElementById('appleIconLink').setAttribute('href', ICON_SVG);
+
+    // ---------- مانیفست پویا برای نصب به‌عنوان وب‌اپ ----------
+    try {
+        const manifestData = {
+            name: 'تایمر اینتروال دویدن و راه رفتن',
+            short_name: 'تایمر اینتروال',
+            start_url: location.href.split('#')[0],
+            display: 'standalone',
+            background_color: '#0b2b3b',
+            theme_color: '#0b2b3b',
+            icons: [{ src: ICON_SVG, sizes: '192x192', type: 'image/svg+xml' }]
+        };
+        const blob = new Blob([JSON.stringify(manifestData)], { type: 'application/manifest+json' });
+        document.getElementById('manifestLink').setAttribute('href', URL.createObjectURL(blob));
+    } catch (e) { /* مرورگر پشتیبانی نمی‌کند، مشکلی نیست */ }
+
+    // ---------- عناصر DOM ----------
+    const walkInput = document.getElementById('walkTime');
+    const runInput = document.getElementById('runTime');
+    const lapsInput = document.getElementById('lapsCount');
+    const timerDisplay = document.getElementById('timerDisplay');
+    const phaseDisplay = document.getElementById('phaseDisplay');
+    const currentLapDisplay = document.getElementById('currentLapDisplay');
+    const currentPhaseDisplay = document.getElementById('currentPhaseDisplay');
+    const statusDisplay = document.getElementById('statusDisplay');
+    const startBtn = document.getElementById('startBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const addLapBtn = document.getElementById('addLapBtn');
+    const notifPermissionBtn = document.getElementById('notifPermissionBtn');
+    const notifStatus = document.getElementById('notifStatus');
+    const progressFill = document.getElementById('progressFill');
+    const progressPercentEl = document.getElementById('progressPercent');
+    const totalRemainingEl = document.getElementById('totalRemaining');
+    const soundToggle = document.getElementById('soundToggle');
+    const halfToggle = document.getElementById('halfToggle');
+    const threeQuarterToggle = document.getElementById('threeQuarterToggle');
+    const vibrateToggle = document.getElementById('vibrateToggle');
+    const wakeToggle = document.getElementById('wakeToggle');
+
+    // ---------- وضعیت اعلان ----------
+    let notificationPermission = ('Notification' in window) ? Notification.permission : 'unsupported';
+
+    function updateNotifStatus() {
+        if (notificationPermission === 'granted') {
+            notifStatus.textContent = '✅ فعال';
+            notifStatus.className = 'notif-status granted';
+            notifPermissionBtn.textContent = 'اعلان‌ها فعال است';
+        } else if (notificationPermission === 'denied') {
+            notifStatus.textContent = '❌ مسدود';
+            notifStatus.className = 'notif-status denied';
+            notifPermissionBtn.textContent = 'فعال کردن در تنظیمات';
+        } else if (notificationPermission === 'unsupported') {
+            notifStatus.textContent = '⛔ پشتیبانی نمی‌شود';
+            notifStatus.className = 'notif-status denied';
+            notifPermissionBtn.disabled = true;
+        } else {
+            notifStatus.textContent = '⏳ غیرفعال';
+            notifStatus.className = 'notif-status default';
+            notifPermissionBtn.textContent = 'فعال کردن اعلان';
+        }
+    }
+
+    function requestNotificationPermission() {
+        if (!('Notification' in window)) return;
+        if (Notification.permission === 'granted') {
+            alert('✅ اعلان‌ها قبلاً فعال شده‌اند.');
+            return;
+        }
+        if (Notification.permission === 'denied') {
+            alert('❌ مجوز اعلان مسدود شده. از تنظیمات مرورگر آن را فعال کنید.');
+            return;
+        }
+        Notification.requestPermission().then(permission => {
+            notificationPermission = permission;
+            updateNotifStatus();
+            if (permission === 'granted') {
+                try {
+                    new Notification('✅ اعلان فعال شد!', { body: 'تایمر شما آماده است.', icon: ICON_SVG });
+                } catch (e) {}
+            }
+        });
+    }
+
+    function sendNotification(title, body, tag) {
+        if (notificationPermission !== 'granted') return;
+        try {
+            const options = {
+                body: body,
+                icon: ICON_SVG,
+                badge: ICON_SVG,
+                silent: false,
+                vibrate: state.settings.vibrateOn ? [200, 100, 200] : [],
+                requireInteraction: false
+            };
+            if (tag) options.tag = tag;
+            const n = new Notification(title, options);
+            setTimeout(() => n.close(), 8000);
+        } catch (e) {}
+        if (state.settings.vibrateOn && navigator.vibrate) {
+            try { navigator.vibrate([120, 60, 120]); } catch (e) {}
+        }
+    }
+
+    // ---------- صدا با Web Audio API ----------
+    let audioContext = null;
+    function getAudioContext() {
+        if (!audioContext) {
+            try {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            } catch (e) { return null; }
+        }
+        return audioContext;
+    }
+
+    function playBeep(frequency, duration, volume) {
+        if (!state.settings.soundOn) return;
+        try {
+            const context = getAudioContext();
+            if (!context) return;
+            if (context.state === 'suspended') context.resume();
+            const oscillator = context.createOscillator();
+            const gainNode = context.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(context.destination);
+            oscillator.type = 'sine';
+            oscillator.frequency.value = frequency;
+            gainNode.gain.setValueAtTime(volume, context.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, context.currentTime + duration / 1000);
+            oscillator.start(context.currentTime);
+            oscillator.stop(context.currentTime + duration / 1000);
+        } catch (e) {}
+    }
+
+    function playHalfSound() { playBeep(700, 160, 0.32); }
+    function playThreeQuarterSound() {
+        playBeep(850, 120, 0.35);
+        setTimeout(() => playBeep(1050, 130, 0.35), 160);
+    }
+    function playCountdownBeep() { playBeep(950, 150, 0.45); }
+    function playPhaseChangeSound() {
+        // بوق پایان شمارش معکوس + شروع مرحله بعد؛ واضح‌تر و بلندتر از بوق‌های ۳-۲-۱
+        playBeep(650, 90, 0.4);
+        setTimeout(() => playBeep(1300, 320, 0.55), 110);
+    }
+    function playLapCompleteSound() {
+        playBeep(650, 90, 0.4);
+        setTimeout(() => playBeep(1300, 220, 0.5), 110);
+        setTimeout(() => playBeep(1500, 260, 0.55), 340);
+    }
+    function playFinishSound() {
+        playBeep(1000, 300, 0.5);
+        setTimeout(() => playBeep(1200, 300, 0.5), 400);
+        setTimeout(() => playBeep(1400, 400, 0.6), 800);
+    }
+    function playLapAddedSound() { playBeep(600, 100, 0.3); }
+
+    // ---------- صدای کم‌شنوا برای کاهش تعلیق تب در پس‌زمینه ----------
+    let keepAliveOsc = null;
+    function startKeepAliveAudio() {
+        if (keepAliveOsc) return;
+        try {
+            const context = getAudioContext();
+            if (!context) return;
+            const osc = context.createOscillator();
+            const gain = context.createGain();
+            gain.gain.value = 0.00001;
+            osc.frequency.value = 20;
+            osc.connect(gain);
+            gain.connect(context.destination);
+            osc.start();
+            keepAliveOsc = osc;
+        } catch (e) {}
+    }
+    function stopKeepAliveAudio() {
+        if (keepAliveOsc) { try { keepAliveOsc.stop(); } catch (e) {} keepAliveOsc = null; }
+    }
+
+    // ---------- Wake Lock (روشن نگه‌داشتن صفحه) ----------
+    let wakeLockObj = null;
+    async function requestWakeLock() {
+        if (!('wakeLock' in navigator) || !state.settings.keepAwake) return;
+        try {
+            wakeLockObj = await navigator.wakeLock.request('screen');
+        } catch (e) { wakeLockObj = null; }
+    }
+    function releaseWakeLock() {
+        if (wakeLockObj) { wakeLockObj.release().catch(() => {}); wakeLockObj = null; }
+    }
+
+    // ---------- تنظیمات کاربر (ذخیره‌شونده) ----------
+    function loadSettings() {
+        let saved = {};
+        try { saved = JSON.parse(localStorage.getItem('intervalTimerSettings') || '{}'); } catch (e) {}
+        return Object.assign({
+            soundOn: true,
+            vibrateOn: true,
+            keepAwake: true,
+            halfSound: true,
+            threeQuarterSound: true
+        }, saved);
+    }
+    function saveSettings() {
+        try { localStorage.setItem('intervalTimerSettings', JSON.stringify(state.settings)); } catch (e) {}
+    }
+
+    // ---------- وضعیت اصلی ----------
+    let state = {
+        walkSeconds: 30,
+        runSeconds: 20,
+        totalLaps: 3,
+        currentLap: 0,
+        phase: 'idle', // idle | walk | run | finished
+        timeLeft: 0,
+        phaseDuration: 0,
+        phaseEndTime: 0,
+        isRunning: false,
+        tickInterval: null,
+        lastNotifTime: 0,
+        milestones: { half: false, threeQuarter: false, countdown: {} },
+        settings: loadSettings()
+    };
+
+    function formatTime(seconds) {
+        if (seconds < 0) seconds = 0;
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    function startPhase(phase) {
+        state.phase = phase;
+        state.milestones = { half: false, threeQuarter: false, countdown: {} };
+        const duration = phase === 'walk' ? state.walkSeconds : state.runSeconds;
+        state.phaseDuration = duration;
+        state.timeLeft = duration;
+        state.phaseEndTime = Date.now() + duration * 1000;
+    }
+
+    function sendPhaseNotification() {
+        const now = Date.now();
+        if (now - state.lastNotifTime < 3000) return;
+        let title = '', body = '';
+        if (state.phase === 'walk') {
+            title = '🚶 زمان راه رفتن';
+            body = `دور ${state.currentLap} از ${state.totalLaps} | ${state.timeLeft} ثانیه`;
+        } else if (state.phase === 'run') {
+            title = '🏃 زمان دویدن';
+            body = `دور ${state.currentLap} از ${state.totalLaps} | ${state.timeLeft} ثانیه`;
+        } else { return; }
+        sendNotification(title, body, `phase-${state.phase}-${state.currentLap}`);
+        state.lastNotifTime = now;
+    }
+
+    function checkMilestones() {
+        if (state.phase !== 'walk' && state.phase !== 'run') return;
+        const d = state.phaseDuration;
+        const half = Math.floor(d / 2);
+        const quarter = Math.floor(d / 4);
+
+        if (!state.milestones.half && state.timeLeft <= half && state.timeLeft > 0) {
+            state.milestones.half = true;
+            if (state.settings.halfSound) playHalfSound();
+            const phaseName = state.phase === 'walk' ? 'راه رفتن' : 'دویدن';
+            sendNotification('⏱ نیمه راه', `نیمی از زمان ${phaseName} این مرحله گذشت`, `half-${state.phase}-${state.currentLap}`);
+        }
+        if (!state.milestones.threeQuarter && state.timeLeft <= quarter && state.timeLeft > 0) {
+            state.milestones.threeQuarter = true;
+            if (state.settings.threeQuarterSound) playThreeQuarterSound();
+            const phaseName = state.phase === 'walk' ? 'راه رفتن' : 'دویدن';
+            sendNotification('⏱ سه‌چهارم راه', `۷۵٪ زمان ${phaseName} این مرحله گذشت`, `threequarter-${state.phase}-${state.currentLap}`);
+        }
+        if (!state.milestones.countdown) state.milestones.countdown = {};
+        if ((state.timeLeft === 3 || state.timeLeft === 2 || state.timeLeft === 1) && !state.milestones.countdown[state.timeLeft]) {
+            state.milestones.countdown[state.timeLeft] = true;
+            playCountdownBeep();
+            const phaseName = state.phase === 'walk' ? 'راه رفتن' : 'دویدن';
+            sendNotification(`⏰ ${state.timeLeft} ثانیه به پایان ${phaseName}`, `دور ${state.currentLap} از ${state.totalLaps}`, `warn-${state.phase}-${state.currentLap}-${state.timeLeft}`);
+        }
+    }
+
+    function advancePhase() {
+        if (state.phase === 'walk') {
+            startPhase('run');
+            playPhaseChangeSound();
+            sendPhaseNotification();
+            return;
+        }
+        if (state.phase === 'run') {
+            state.currentLap += 1;
+            if (state.currentLap > state.totalLaps) {
+                state.phase = 'finished';
+                state.timeLeft = 0;
+                state.isRunning = false;
+                if (state.tickInterval) { clearInterval(state.tickInterval); state.tickInterval = null; }
+                releaseWakeLock();
+                stopKeepAliveAudio();
+                playFinishSound();
+                sendNotification('🎉 تبریک!', `شما ${state.totalLaps} دور را با موفقیت کامل کردید!`, 'finished');
+                if (state.settings.vibrateOn && navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 400]);
+                return;
+            } else {
+                startPhase('walk');
+                playLapCompleteSound();
+                sendPhaseNotification();
+                return;
+            }
+        }
+    }
+
+    function tick() {
+        if (!state.isRunning) return;
+        let now = Date.now();
+        let safety = 0;
+        while (state.isRunning && now >= state.phaseEndTime && safety < 500) {
+            state.timeLeft = 0;
+            advancePhase();
+            now = Date.now();
+            safety++;
+        }
+        if (!state.isRunning) { updateUI(); return; }
+        const remainingMs = state.phaseEndTime - now;
+        state.timeLeft = Math.max(0, Math.ceil(remainingMs / 1000));
+        checkMilestones();
+        updateUI();
+    }
+
+    function updateProgress() {
+        const walk = state.walkSeconds, run = state.runSeconds, laps = state.totalLaps;
+        const totalDuration = laps * (walk + run);
+        let remaining = totalDuration;
+        if (state.phase === 'finished') {
+            remaining = 0;
+        } else if (state.phase === 'walk') {
+            const lapsAfter = Math.max(0, laps - state.currentLap);
+            remaining = state.timeLeft + run + lapsAfter * (walk + run);
+        } else if (state.phase === 'run') {
+            const lapsAfter = Math.max(0, laps - state.currentLap);
+            remaining = state.timeLeft + lapsAfter * (walk + run);
+        }
+        const elapsed = Math.max(0, totalDuration - remaining);
+        const percent = totalDuration > 0 ? Math.min(100, Math.max(0, (elapsed / totalDuration) * 100)) : 0;
+        progressFill.style.width = percent.toFixed(1) + '%';
+        progressPercentEl.textContent = Math.round(percent) + '٪';
+        totalRemainingEl.textContent = formatTime(remaining);
+    }
+
+    function updateUI() {
+        timerDisplay.textContent = formatTime(state.timeLeft);
+        currentLapDisplay.textContent = state.currentLap;
+
+        if (state.timeLeft <= 3 && state.timeLeft > 0 && (state.phase === 'walk' || state.phase === 'run')) {
+            timerDisplay.classList.add('timer-warning');
+        } else {
+            timerDisplay.classList.remove('timer-warning');
+        }
+
+        let phaseText = '', phaseIcon = '';
+        if (state.phase === 'idle') { phaseText = '⏸ آماده'; phaseIcon = '-'; }
+        else if (state.phase === 'walk') { phaseText = '🚶 راه رفتن'; phaseIcon = '🚶'; }
+        else if (state.phase === 'run') { phaseText = '🏃 دویدن'; phaseIcon = '🏃'; }
+        else if (state.phase === 'finished') { phaseText = '✅ تمام شد!'; phaseIcon = '✅'; }
+        phaseDisplay.textContent = phaseText;
+        currentPhaseDisplay.textContent = phaseIcon;
+
+        if (state.isRunning) statusDisplay.textContent = '▶ در حال اجرا';
+        else if (state.phase === 'finished') statusDisplay.textContent = '✅ پایان';
+        else statusDisplay.textContent = '⏸ متوقف';
+
+        startBtn.disabled = state.isRunning || state.phase === 'finished';
+        pauseBtn.disabled = !state.isRunning;
+        addLapBtn.disabled = state.phase === 'finished';
+
+        updateProgress();
+    }
+
+    function stopTimer() {
+        if (state.tickInterval) { clearInterval(state.tickInterval); state.tickInterval = null; }
+        state.isRunning = false;
+        releaseWakeLock();
+        stopKeepAliveAudio();
+        updateUI();
+    }
+
+    function startTimer() {
+        if (state.phase === 'finished' || state.isRunning) return;
+
+        const context = getAudioContext();
+        if (context && context.state === 'suspended') context.resume();
+
+        if (state.phase === 'idle') {
+            const walk = parseInt(walkInput.value, 10);
+            const run = parseInt(runInput.value, 10);
+            const laps = parseInt(lapsInput.value, 10);
+            if (isNaN(walk) || walk < 1) { alert('زمان راه رفتن باید حداقل ۱ ثانیه باشد'); return; }
+            if (isNaN(run) || run < 1) { alert('زمان دویدن باید حداقل ۱ ثانیه باشد'); return; }
+            if (isNaN(laps) || laps < 1) { alert('تعداد دورها باید حداقل ۱ باشد'); return; }
+            state.walkSeconds = walk;
+            state.runSeconds = run;
+            state.totalLaps = laps;
+            state.currentLap = 1;
+            startPhase('walk');
+            sendNotification('🏃 تایمر شروع شد!', `دور ۱ از ${laps} | راه رفتن ${walk} ثانیه`, 'start');
+        } else {
+            // ادامه از حالت توقف: زمان پایان مرحله را دوباره از زمان باقیمانده محاسبه کن
+            state.phaseEndTime = Date.now() + state.timeLeft * 1000;
+        }
+
+        state.isRunning = true;
+        requestWakeLock();
+        startKeepAliveAudio();
+
+        if (state.tickInterval) clearInterval(state.tickInterval);
+        state.tickInterval = setInterval(tick, 250);
+        updateUI();
+    }
+
+    function resetTimer() {
+        if (state.tickInterval) { clearInterval(state.tickInterval); state.tickInterval = null; }
+        state.isRunning = false;
+        releaseWakeLock();
+        stopKeepAliveAudio();
+
+        const walk = parseInt(walkInput.value, 10);
+        const run = parseInt(runInput.value, 10);
+        const laps = parseInt(lapsInput.value, 10);
+        if (!isNaN(walk) && walk > 0) state.walkSeconds = walk;
+        if (!isNaN(run) && run > 0) state.runSeconds = run;
+        if (!isNaN(laps) && laps > 0) state.totalLaps = laps;
+
+        state.phase = 'idle';
+        state.currentLap = 0;
+        state.timeLeft = 0;
+        state.milestones = { half: false, threeQuarter: false, countdown: {} };
+
+        timerDisplay.classList.remove('timer-warning');
+        updateUI();
+    }
+
+    function pauseTimer() {
+        if (!state.isRunning) return;
+        stopTimer();
+        sendNotification('⏸ تایمر متوقف شد', `در مرحله ${state.phase === 'walk' ? 'راه رفتن' : 'دویدن'} دور ${state.currentLap}`, 'paused');
+    }
+
+    function addLap() {
+        if (state.phase === 'finished') {
+            alert('⚠️ تایمر به پایان رسیده. لطفاً ابتدا ریست کنید.');
+            return;
+        }
+        let currentLaps = parseInt(lapsInput.value, 10);
+        if (isNaN(currentLaps) || currentLaps < 1) currentLaps = state.totalLaps || 1;
+        currentLaps += 1;
+        lapsInput.value = currentLaps;
+        state.totalLaps = currentLaps;
+
+        addLapBtn.style.transform = 'scale(1.2)';
+        setTimeout(() => { addLapBtn.style.transform = 'scale(1)'; }, 200);
+
+        playLapAddedSound();
+        sendNotification('➕ دور جدید اضافه شد!', `تعداد کل دورها: ${currentLaps}`, 'lap-added');
+        updateUI();
+    }
+
+    lapsInput.addEventListener('change', () => {
+        if (state.phase === 'idle' || state.phase === 'finished') return;
+        let v = parseInt(lapsInput.value, 10);
+        if (isNaN(v) || v < 1) { lapsInput.value = state.totalLaps; return; }
+        if (v < state.currentLap) {
+            alert('تعداد دور نمی‌تواند کمتر از دور جاری باشد.');
+            lapsInput.value = state.totalLaps;
+            return;
+        }
+        state.totalLaps = v;
+        updateUI();
+    });
+
+    // ---------- رویدادها ----------
+    startBtn.addEventListener('click', startTimer);
+    pauseBtn.addEventListener('click', pauseTimer);
+    resetBtn.addEventListener('click', resetTimer);
+    addLapBtn.addEventListener('click', addLap);
+    notifPermissionBtn.addEventListener('click', requestNotificationPermission);
+
+    soundToggle.checked = state.settings.soundOn;
+    halfToggle.checked = state.settings.halfSound;
+    threeQuarterToggle.checked = state.settings.threeQuarterSound;
+    vibrateToggle.checked = state.settings.vibrateOn;
+    wakeToggle.checked = state.settings.keepAwake;
+
+    soundToggle.addEventListener('change', () => { state.settings.soundOn = soundToggle.checked; saveSettings(); });
+    halfToggle.addEventListener('change', () => { state.settings.halfSound = halfToggle.checked; saveSettings(); });
+    threeQuarterToggle.addEventListener('change', () => { state.settings.threeQuarterSound = threeQuarterToggle.checked; saveSettings(); });
+    vibrateToggle.addEventListener('change', () => { state.settings.vibrateOn = vibrateToggle.checked; saveSettings(); });
+    wakeToggle.addEventListener('change', () => {
+        state.settings.keepAwake = wakeToggle.checked;
+        saveSettings();
+        if (state.settings.keepAwake && state.isRunning) requestWakeLock();
+        else releaseWakeLock();
+    });
+
+    updateNotifStatus();
+    resetTimer();
+
+    // ---------- افزودن به صفحه اصلی (نصب به‌عنوان وب‌اپ) ----------
+    const installSection = document.getElementById('installSection');
+    const installBtn = document.getElementById('installBtn');
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    let deferredInstallPrompt = null;
+
+    if (!isStandalone) {
+        if (isIOS) {
+            // سافاری از beforeinstallprompt پشتیبانی نمی‌کند؛ راهنمای دستی نشان بده
+            installSection.style.display = 'flex';
+            installBtn.textContent = 'راهنمای افزودن';
+        }
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredInstallPrompt = e;
+            installSection.style.display = 'flex';
+            installBtn.textContent = 'افزودن به صفحه اصلی';
+        });
+        window.addEventListener('appinstalled', () => {
+            installSection.style.display = 'none';
+            deferredInstallPrompt = null;
+        });
+    }
+
+    installBtn.addEventListener('click', async () => {
+        if (deferredInstallPrompt) {
+            deferredInstallPrompt.prompt();
+            await deferredInstallPrompt.userChoice;
+            deferredInstallPrompt = null;
+            installSection.style.display = 'none';
+            return;
+        }
+        if (isIOS) {
+            alert('برای افزودن آیکون به صفحه اصلی:\n۱. دکمه اشتراک‌گذاری (Share) پایین صفحه سافاری را بزنید\n۲. گزینه «Add to Home Screen» را انتخاب کنید\n۳. روی «Add» بزنید');
+            return;
+        }
+        alert('مرورگر شما نصب مستقیم را پشتیبانی نمی‌کند. از منوی مرورگر گزینه «افزودن به صفحه اصلی» یا «نصب برنامه» را انتخاب کنید.');
+    });
+
+    document.addEventListener('click', function () {
+        const context = getAudioContext();
+        if (context && context.state === 'suspended') context.resume();
+    }, { once: false });
+
+    document.addEventListener('visibilitychange', async function () {
+        if (document.visibilityState === 'visible') {
+            if (state.isRunning) {
+                if (state.settings.keepAwake) await requestWakeLock();
+                tick(); // فوراً بر اساس زمان واقعی به‌روزرسانی می‌شود تا با هر تأخیر پس‌زمینه هماهنگ شود
+            }
+        } else if (state.isRunning) {
+            const phaseName = state.phase === 'walk' ? 'راه رفتن' : 'دویدن';
+            sendNotification('⏱ تایمر در حال اجراست', `${phaseName} | دور ${state.currentLap} از ${state.totalLaps} | ${state.timeLeft} ثانیه`, 'background-status');
+        }
+    });
+})();
+</script>
+</body>
+</html>
