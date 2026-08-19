@@ -46,6 +46,7 @@
     html,body{ height:100%; }
     body{
         min-height:100vh;
+        overflow-x:hidden;
         color:var(--ink-1);
         background:
             radial-gradient(ellipse 900px 520px at 12% -8%, rgba(56,189,248,0.16), transparent 60%),
@@ -142,8 +143,9 @@
     .bar-fill{ height:100%; width:0%; border-radius:20px; background:linear-gradient(90deg, var(--walk), var(--run)); transition: width 0.4s ease; }
 
     /* ---------- تنظیم زمان‌بندی ---------- */
-    .setup-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px; }
+    .setup-grid{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:12px; margin-bottom:12px; }
     .stepper{
+        min-width:0;
         background: var(--surface); border:1px solid var(--border-soft); border-radius: var(--r-md);
         padding:12px 12px 13px; transition:0.2s;
     }
@@ -160,7 +162,7 @@
     .stepper-btn:hover{ background:rgba(255,255,255,0.14); }
     .stepper-btn:active{ transform:scale(0.92); }
     .stepper input[type="number"]{
-        flex:1; min-width:0; text-align:center; background:transparent; border:none; outline:none;
+        flex:1 1 0%; width:0; min-width:0; text-align:center; background:transparent; border:none; outline:none;
         color:var(--ink-1); font-size:1.25rem; font-weight:700; font-variant-numeric:tabular-nums;
         -moz-appearance:textfield;
     }
@@ -169,7 +171,7 @@
     .stepper .unit{ font-size:0.7rem; color:var(--ink-3); font-weight:500; text-align:center; margin-top:6px; }
 
     .laps-card{
-        grid-column: 1 / -1; background:var(--surface); border:1px solid var(--border-soft); border-radius: var(--r-md);
+        grid-column: 1 / -1; min-width:0; background:var(--surface); border:1px solid var(--border-soft); border-radius: var(--r-md);
         padding:12px 12px 13px; display:flex; align-items:center; gap:14px; justify-content:space-between; flex-wrap:wrap;
     }
     .laps-card .stepper-label{ font-size:0.78rem; color:var(--ink-2); font-weight:600; display:flex; align-items:center; gap:6px; }
@@ -238,8 +240,9 @@
         padding:12px 16px; display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:10px;
         flex-wrap:wrap;
     }
-    .system-row .txt{ display:flex; align-items:center; gap:10px; font-size:0.85rem; color:var(--ink-1); font-weight:600; }
+    .system-row .txt{ display:flex; align-items:center; gap:8px; font-size:0.85rem; color:var(--ink-1); font-weight:600; white-space:nowrap; }
     .system-row .txt svg{ width:18px; height:18px; color:var(--ink-2); flex-shrink:0; }
+    .system-row .actions{ display:flex; align-items:center; gap:10px; }
     .status-chip{ font-weight:700; padding:3px 12px; border-radius:20px; font-size:0.74rem; white-space:nowrap; }
     .status-chip.granted{ color:var(--success); background:var(--success-soft); }
     .status-chip.denied{ color:var(--danger); background:var(--danger-soft); }
@@ -444,8 +447,11 @@
             <button class="btn-pill" id="installBtn">افزودن به صفحه اصلی</button>
         </div>
         <div class="system-row">
-            <span class="txt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9zM13.7 21a2 2 0 01-3.4 0"/></svg>اعلان‌ها <span class="status-chip default" id="notifStatus">غیرفعال</span></span>
-            <button class="btn-pill" id="notifPermissionBtn">فعال کردن</button>
+            <span class="txt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9zM13.7 21a2 2 0 01-3.4 0"/></svg>اعلان‌ها</span>
+            <div class="actions">
+                <span class="status-chip default" id="notifStatus">غیرفعال</span>
+                <button class="btn-pill" id="notifPermissionBtn">فعال کردن</button>
+            </div>
         </div>
 
         <p class="footer-note">یک فایل، بدون نیاز به نصب اضافی — همه‌چیز همین‌جاست.</p>
