@@ -502,6 +502,32 @@
 (function () {
     // ---------- آیکون مشترک ----------
     const ICON_SVG = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"%3E%3Ccircle cx="50" cy="50" r="45" fill="%2300a3e0"/%3E%3Ctext x="50" y="65" font-size="40" text-anchor="middle" fill="white"%3E%F0%9F%8F%83%3C/text%3E%3C/svg%3E';
+
+    // کروم اندروید در showNotification() از آیکون SVG پشتیبانی نمی‌کند و بی‌صدا شکست می‌خورد؛
+    // برای اعلان‌ها یک نسخه PNG واقعی با canvas می‌سازیم.
+    function generateNotificationIconPNG() {
+        try {
+            const canvas = document.createElement('canvas');
+            canvas.width = 192;
+            canvas.height = 192;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#00a3e0';
+            ctx.beginPath();
+            ctx.arc(96, 96, 88, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.font = '96px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('🏃', 96, 104);
+            return canvas.toDataURL('image/png');
+        } catch (e) {
+            console.error('❌ ساخت آیکون PNG برای اعلان ناموفق بود:', e);
+            return null;
+        }
+    }
+    // اگر ساخت PNG ناموفق بود، به SVG برمی‌گردیم (بهتر از هیچی، هرچند ممکن است در اندروید کار نکند)
+    const ICON_NOTIF = generateNotificationIconPNG() || ICON_SVG;
+
     document.getElementById('iconLink').setAttribute('href', ICON_SVG);
     document.getElementById('appleIconLink').setAttribute('href', ICON_SVG);
 
@@ -547,24 +573,22 @@
     // ---------- وضعیت اعلان ----------
     let notificationPermission = ('Notification' in window) ? Notification.permission : 'unsupported';
     let swRegistration = null;
-    // به‌جای اتکا به navigator.serviceWorker.ready (که اگر ثبت ناموفق باشد تا ابد در حالت pending می‌ماند)
-    // یک Promise واحد نگه می‌داریم که همیشه resolve می‌شود (حتی روی خطا با مقدار null)
-    let swReadyPromise = Promise.resolve(null);
 
-    if (!('serviceWorker' in navigator)) {
-        console.warn('این مرورگر/بستر از Service Worker پشتیبانی نمی‌کند (مثلاً باز کردن فایل با file:// یا مرورگر قدیمی). اعلان‌های پس‌زمینه کار نخواهند کرد.');
-    } else if (!window.isSecureContext) {
-        console.warn('صفحه در یک context امن (https یا localhost) اجرا نمی‌شود؛ Service Worker ثبت نخواهد شد.');
-    } else {
+    let swReadyPromise = null;
+    if ('serviceWorker' in navigator) {
         swReadyPromise = navigator.serviceWorker.register('sw.js')
             .then(reg => {
                 swRegistration = reg;
+                console.log('✅ Service Worker با موفقیت ثبت شد:', reg.scope);
                 return reg;
             })
             .catch(err => {
-                console.warn('ثبت service worker ناموفق بود:', err);
+                console.error('❌ ثبت service worker ناموفق بود:', err);
+                alert('⚠️ ثبت Service Worker ناموفق بود: ' + err.message + '\nاحتمالاً صفحه باید از طریق HTTPS یا localhost باز شود (نه file://).');
                 return null;
             });
+    } else {
+        console.warn('⛔ Service Worker در این مرورگر/پروتکل پشتیبانی نمی‌شود (شاید صفحه با file:// باز شده یا مرورگر قدیمی است).');
     }
 
     function updateNotifStatus() {
@@ -602,7 +626,7 @@
             updateNotifStatus();
             if (permission === 'granted') {
                 try {
-                    new Notification('✅ اعلان فعال شد!', { body: 'تایمر شما آماده است.', icon: ICON_SVG });
+                    new Notification('✅ اعلان فعال شد!', { body: 'تایمر شما آماده است.', icon: ICON_NOTIF });
                 } catch (e) {}
             }
         });
@@ -612,33 +636,40 @@
         try {
             const n = new Notification(title, options);
             setTimeout(() => n.close(), 8000);
-        } catch (e) { /* برخی مرورگرهای موبایل بدون سرویس‌ورکر اجازه نمی‌دهند */ }
+        } catch (e) {
+            // خیلی از مرورگرهای موبایل (مثلاً کروم اندروید) اجازه new Notification() مستقیم را نمی‌دهند
+            // و فقط از طریق serviceWorkerRegistration.showNotification() کار می‌کند
+            console.error('❌ نمایش اعلان (بدون service worker) ناموفق بود:', e);
+        }
     }
 
-    function sendNotification(title, body, tag) {
+    async function sendNotification(title, body, tag) {
         if (notificationPermission !== 'granted') return;
         const options = {
             body: body,
-            icon: ICON_SVG,
-            badge: ICON_SVG,
+            icon: ICON_NOTIF,
+            badge: ICON_NOTIF,
             silent: false,
             vibrate: state.settings.vibrateOn ? [200, 100, 200] : [],
             requireInteraction: false
         };
         if (tag) { options.tag = tag; options.renotify = true; }
 
-        if (swRegistration) {
-            // ثبت قبلاً کامل شده؛ مستقیم استفاده کن
-            swRegistration.showNotification(title, options).catch(() => fallbackNotify(title, options));
-        } else {
-            // ممکن است ثبت هنوز کامل نشده باشد؛ منتظر همان Promise ثبت بمان (نه navigator.serviceWorker.ready
-            // که در صورت شکست ثبت، هرگز resolve نمی‌شود و باعث می‌شد اعلان اصلاً نمایش داده نشود)
-            swReadyPromise
-                .then(reg => {
-                    if (reg) return reg.showNotification(title, options);
-                    return fallbackNotify(title, options);
-                })
-                .catch(() => fallbackNotify(title, options));
+        try {
+            // صبر می‌کنیم تا service worker واقعاً آماده شود (به‌جای فرض کردن اینکه از قبل آماده است)
+            let reg = swRegistration;
+            if (!reg && 'serviceWorker' in navigator) {
+                reg = await navigator.serviceWorker.ready;
+                swRegistration = reg;
+            }
+            if (reg) {
+                await reg.showNotification(title, options);
+            } else {
+                fallbackNotify(title, options);
+            }
+        } catch (e) {
+            console.error('❌ خطا در نمایش اعلان:', e);
+            fallbackNotify(title, options);
         }
 
         if (state.settings.vibrateOn && navigator.vibrate) {
