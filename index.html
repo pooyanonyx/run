@@ -57,7 +57,7 @@
         display:flex;
         justify-content:center;
         align-items:flex-start;
-        padding:32px 16px calc(var(--nav-h) + 46px);
+        padding:18px 16px calc(var(--nav-h) + 30px);
     }
     .shell{ width:100%; max-width:460px; display:flex; flex-direction:column; gap:14px; }
 
@@ -66,7 +66,7 @@
         background: linear-gradient(165deg, rgba(255,255,255,0.06), rgba(255,255,255,0.015));
         border:1px solid var(--border);
         border-radius: var(--r-xl);
-        padding: 26px 22px 24px;
+        padding: 18px 20px 20px;
         box-shadow: var(--shadow-card);
         backdrop-filter: blur(18px);
         -webkit-backdrop-filter: blur(18px);
@@ -88,20 +88,20 @@
     .page-header .icon-badge svg{ width:21px; height:21px; color:var(--ink-1); }
 
     /* ---------- هدر برند (فقط صفحه تایمر) ---------- */
-    .app-header{ display:flex; align-items:center; gap:14px; margin-bottom:22px; }
+    .app-header{ display:flex; align-items:center; gap:12px; margin-bottom:12px; }
     .brand-badge{
-        width:46px; height:46px; flex-shrink:0; border-radius:14px;
+        width:38px; height:38px; flex-shrink:0; border-radius:12px;
         background: linear-gradient(150deg, var(--walk), #0f6fa8);
         display:flex; align-items:center; justify-content:center;
         box-shadow: 0 8px 18px rgba(56,189,248,0.35);
     }
-    .brand-badge svg{ width:26px; height:26px; }
-    .app-header h1{ font-size:1.28rem; font-weight:800; letter-spacing:0.2px; color:var(--ink-1); }
-    .app-header p{ font-size:0.8rem; color:var(--ink-3); font-weight:500; margin-top:2px; }
+    .brand-badge svg{ width:21px; height:21px; }
+    .app-header h1{ font-size:1.1rem; font-weight:800; letter-spacing:0.2px; color:var(--ink-1); }
+    .app-header p{ font-size:0.74rem; color:var(--ink-3); font-weight:500; margin-top:1px; }
 
     /* ---------- محوطهٔ تایمر / کرونومتر (امضای طراحی: مسیر بیضی‌شکل مثل زمین دو) ---------- */
-    .stage{ display:flex; flex-direction:column; align-items:center; margin-bottom:18px; }
-    .track-wrap{ position:relative; width:100%; max-width:320px; aspect-ratio: 320 / 178; }
+    .stage{ display:flex; flex-direction:column; align-items:center; margin-bottom:10px; }
+    .track-wrap{ position:relative; width:100%; max-width:280px; aspect-ratio: 320 / 178; }
     .track-svg{ position:absolute; inset:0; width:100%; height:100%; overflow:visible; }
     .track-base{ fill:none; stroke:rgba(255,255,255,0.07); stroke-width:11; }
     .track-progress{
@@ -121,7 +121,7 @@
         align-items:center; justify-content:center; gap:6px; text-align:center;
     }
     .digits{
-        font-size:3.1rem; font-weight:800; letter-spacing:2px; color:var(--ink-1);
+        font-size:2.55rem; font-weight:800; letter-spacing:1.5px; color:var(--ink-1);
         font-variant-numeric: tabular-nums; line-height:1;
     }
     .digits .sw-centi{ font-size:1.3rem; font-weight:700; color:var(--ink-2); margin-inline-start:4px; }
@@ -132,7 +132,7 @@
     @keyframes pulse{ 0%{opacity:1; transform:scale(1);} 100%{opacity:0.65; transform:scale(0.97);} }
 
     .phase-chip{
-        font-size:0.85rem; font-weight:700; padding:5px 16px; border-radius:30px;
+        font-size:0.76rem; font-weight:700; padding:4px 14px; border-radius:30px;
         background: var(--surface-2); color:var(--ink-2); border:1px solid var(--border-soft);
         transition: 0.3s;
     }
@@ -141,8 +141,8 @@
     .phase-chip[data-phase="finished"]{ background:var(--success-soft); color:var(--success); }
 
     /* دورهای مسابقه */
-    .lap-info{ margin-top:16px; text-align:center; }
-    .lap-info .lap-text{ font-size:0.85rem; color:var(--ink-3); font-weight:600; margin-bottom:8px; }
+    .lap-info{ margin-top:8px; text-align:center; }
+    .lap-info .lap-text{ font-size:0.8rem; color:var(--ink-3); font-weight:600; margin-bottom:6px; }
     .lap-info .lap-text b{ color:var(--ink-1); }
     .lap-dots{ display:flex; flex-wrap:wrap; justify-content:center; gap:6px; max-width:280px; margin:0 auto; }
     .lap-dot{
@@ -154,21 +154,21 @@
     .lap-dot.active{ background:var(--run); border-color:var(--run); box-shadow:0 0 0 3px rgba(251,139,60,0.22); }
 
     /* ---------- نوار پیشرفت کل ---------- */
-    .total-progress{ margin-bottom:20px; }
-    .total-progress .row{ display:flex; justify-content:space-between; font-size:0.78rem; color:var(--ink-3); margin-bottom:7px; font-weight:600; }
+    .total-progress{ margin-bottom:12px; }
+    .total-progress .row{ display:flex; justify-content:space-between; font-size:0.74rem; color:var(--ink-3); margin-bottom:6px; font-weight:600; }
     .total-progress .row .value{ color:var(--ink-1); font-weight:700; }
     .bar-track{ background:rgba(0,0,0,0.35); border-radius:20px; height:7px; overflow:hidden; border:1px solid var(--border-soft); }
     .bar-fill{ height:100%; width:0%; border-radius:20px; background:linear-gradient(90deg, var(--walk), var(--run)); transition: width 0.4s ease; }
 
     /* ---------- تنظیم زمان‌بندی ---------- */
-    .setup-grid{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:12px; margin-bottom:12px; }
+    .setup-grid{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:8px; margin-bottom:8px; }
     .stepper{
         min-width:0;
         background: var(--surface); border:1px solid var(--border-soft); border-radius: var(--r-md);
-        padding:12px 12px 13px; transition:0.2s;
+        padding:9px 10px 10px; transition:0.2s;
     }
     .stepper:focus-within{ border-color: var(--walk); box-shadow:0 0 0 3px var(--walk-soft); }
-    .stepper .stepper-label{ font-size:0.78rem; color:var(--ink-2); font-weight:600; display:flex; align-items:center; gap:6px; margin-bottom:9px; }
+    .stepper .stepper-label{ font-size:0.74rem; color:var(--ink-2); font-weight:600; display:flex; align-items:center; gap:5px; margin-bottom:6px; }
     .stepper .stepper-label svg{ width:15px; height:15px; flex-shrink:0; }
     .stepper .stepper-control{ display:flex; align-items:center; gap:8px; }
     .stepper-btn{
@@ -232,19 +232,19 @@
 
     .laps-card{
         grid-column: 1 / -1; min-width:0; background:var(--surface); border:1px solid var(--border-soft); border-radius: var(--r-md);
-        padding:12px 12px 13px; display:flex; align-items:center; gap:14px; justify-content:space-between; flex-wrap:wrap;
+        padding:9px 12px 10px; display:flex; align-items:center; gap:14px; justify-content:space-between; flex-wrap:wrap;
     }
-    .laps-card .stepper-label{ font-size:0.78rem; color:var(--ink-2); font-weight:600; display:flex; align-items:center; gap:6px; }
+    .laps-card .stepper-label{ font-size:0.74rem; color:var(--ink-2); font-weight:600; display:flex; align-items:center; gap:6px; }
     .laps-card .stepper-label svg{ width:15px; height:15px; }
     .laps-card .stepper-control{ display:flex; align-items:center; gap:8px; }
     .laps-card input[type="number"]{
         width:56px; text-align:center; background:transparent; border:none; outline:none;
-        color:var(--ink-1); font-size:1.25rem; font-weight:700; font-variant-numeric:tabular-nums;
+        color:var(--ink-1); font-size:1.15rem; font-weight:700; font-variant-numeric:tabular-nums;
     }
-    .setup-hint{ font-size:0.72rem; color:var(--ink-3); text-align:center; margin:2px 0 18px; line-height:1.7; }
+    .setup-hint{ font-size:0.7rem; color:var(--ink-3); text-align:center; margin:2px 0 10px; line-height:1.6; }
 
     /* ---------- دکمه‌های کنترل ---------- */
-    .actions{ display:flex; gap:10px; margin-bottom:18px; }
+    .actions{ display:flex; gap:10px; margin-bottom:8px; }
     .btn{
         flex:1; padding:14px 10px; border:none; border-radius:16px; font-weight:700; font-size:0.92rem;
         display:flex; align-items:center; justify-content:center; gap:7px; cursor:pointer; transition:0.2s;
@@ -539,7 +539,7 @@
                 </button>
             </div>
 
-            <div class="stats-grid">
+            <div class="stats-grid" style="display:none;">
                 <div class="stat-card"><div class="label">دور جاری</div><div class="value" id="currentLapDisplay">0</div></div>
                 <div class="stat-card"><div class="label">مرحله</div><div class="value" id="currentPhaseDisplay">−</div></div>
                 <div class="stat-card"><div class="label">وضعیت</div><div class="value" id="statusDisplay">متوقف</div></div>
