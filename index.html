@@ -190,6 +190,45 @@
     .stepper input[type="number"]::-webkit-outer-spin-button,
     .stepper input[type="number"]::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
     .stepper .unit{ font-size:0.7rem; color:var(--ink-3); font-weight:500; text-align:center; margin-top:6px; }
+    .unit-switch{ display:flex; justify-content:center; gap:5px; margin-top:9px; }
+    .unit-opt{
+        position:relative; font-size:0.66rem; font-weight:700; padding:4px 11px; border-radius:20px;
+        background:transparent; border:1px solid var(--border-soft); color:var(--ink-3); cursor:pointer; transition:0.18s;
+        touch-action:manipulation; -webkit-tap-highlight-color:transparent;
+    }
+    .unit-opt::before{ content:''; position:absolute; inset:-6px; }
+    .unit-opt:hover{ color:var(--ink-1); }
+    .unit-switch[data-color="walk"] .unit-opt.active{ background:var(--walk-soft); color:var(--walk); border-color:transparent; }
+    .unit-switch[data-color="run"] .unit-opt.active{ background:var(--run-soft); color:var(--run); border-color:transparent; }
+
+    /* ---------- چرخ انتخاب زمان (دقیقه:ثانیه) شبیه ساعت گوشی ---------- */
+    .wheel-row{ display:flex; align-items:center; justify-content:center; gap:7px; direction:ltr; }
+    .wheel-block{ display:flex; flex-direction:column; align-items:center; min-width:0; }
+    .wheel-col{
+        position:relative; width:48px; height:96px; overflow:hidden; border-radius:12px;
+        background:rgba(0,0,0,0.18); border:1px solid var(--border-soft); flex-shrink:0;
+    }
+    .wheel-highlight{
+        position:absolute; left:2px; right:2px; top:50%; height:32px; transform:translateY(-50%);
+        background:var(--surface-2); border-top:1px solid var(--border); border-bottom:1px solid var(--border);
+        border-radius:8px; pointer-events:none; z-index:1;
+    }
+    .wheel-scroll{
+        position:relative; z-index:2; height:100%; overflow-y:scroll; scroll-snap-type:y mandatory;
+        -webkit-overflow-scrolling:touch; overscroll-behavior-y:contain; outline:none;
+        -ms-overflow-style:none; scrollbar-width:none;
+        -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 34%, black 66%, transparent 100%);
+        mask-image: linear-gradient(to bottom, transparent 0%, black 34%, black 66%, transparent 100%);
+    }
+    .wheel-scroll::-webkit-scrollbar{ display:none; }
+    .wheel-scroll .wheel-item{
+        height:32px; display:flex; align-items:center; justify-content:center;
+        font-size:1.02rem; font-weight:700; font-variant-numeric:tabular-nums;
+        color:var(--ink-3); scroll-snap-align:center; transition:color 0.15s; user-select:none; cursor:pointer;
+    }
+    .wheel-scroll .wheel-item.is-active{ color:var(--ink-1); font-size:1.16rem; }
+    .wheel-colon{ font-size:1.1rem; font-weight:800; color:var(--ink-2); align-self:center; flex-shrink:0; }
+    .wheel-caption{ font-size:0.64rem; color:var(--ink-3); font-weight:500; text-align:center; margin-top:7px; letter-spacing:0.2px; }
 
     .laps-card{
         grid-column: 1 / -1; min-width:0; background:var(--surface); border:1px solid var(--border-soft); border-radius: var(--r-md);
@@ -428,32 +467,44 @@
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M13 4a2 2 0 11-4 0 2 2 0 014 0zM9.5 20l1.2-6.4-2-1.5.6-3 2 1.4c1 .7 1.3.7 2.3.1l2-1.2M9 12.8l-3 1.3-1 3.4M15 8l2 1.6-1 3.4-3.2 1"/></svg>
                         راه‌رفتن
                     </div>
-                    <div class="stepper-control">
-                        <button class="stepper-btn" id="walkMinus" type="button" aria-label="کم کردن زمان راه‌رفتن">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14"/></svg>
-                        </button>
-                        <input type="number" id="walkTime" value="30" min="1" step="1" inputmode="numeric">
-                        <button class="stepper-btn" id="walkPlus" type="button" aria-label="زیاد کردن زمان راه‌رفتن">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-                        </button>
+                    <div class="wheel-row">
+                        <div class="wheel-block">
+                            <div class="wheel-col">
+                                <div class="wheel-highlight"></div>
+                                <div class="wheel-scroll" id="walkMinScroll" tabindex="0" role="listbox" aria-label="دقیقهٔ راه‌رفتن"></div>
+                            </div>
+                        </div>
+                        <div class="wheel-colon">:</div>
+                        <div class="wheel-block">
+                            <div class="wheel-col">
+                                <div class="wheel-highlight"></div>
+                                <div class="wheel-scroll" id="walkSecScroll" tabindex="0" role="listbox" aria-label="ثانیهٔ راه‌رفتن"></div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="unit">ثانیه</div>
+                    <div class="wheel-caption">ثانیه&nbsp; : &nbsp;دقیقه</div>
                 </div>
                 <div class="stepper">
                     <div class="stepper-label">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M13.5 4.5a1.7 1.7 0 11-3.4 0 1.7 1.7 0 013.4 0zM11 8l3 2 2.5-1M6.5 21l2-5.5L7 13l1-3.5 3 1.8c.9.6 1.3.6 2.2 0L16 9.5M4.5 14l2.5-1.5"/></svg>
                         دویدن
                     </div>
-                    <div class="stepper-control">
-                        <button class="stepper-btn" id="runMinus" type="button" aria-label="کم کردن زمان دویدن">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14"/></svg>
-                        </button>
-                        <input type="number" id="runTime" value="20" min="1" step="1" inputmode="numeric">
-                        <button class="stepper-btn" id="runPlus" type="button" aria-label="زیاد کردن زمان دویدن">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-                        </button>
+                    <div class="wheel-row">
+                        <div class="wheel-block">
+                            <div class="wheel-col">
+                                <div class="wheel-highlight"></div>
+                                <div class="wheel-scroll" id="runMinScroll" tabindex="0" role="listbox" aria-label="دقیقهٔ دویدن"></div>
+                            </div>
+                        </div>
+                        <div class="wheel-colon">:</div>
+                        <div class="wheel-block">
+                            <div class="wheel-col">
+                                <div class="wheel-highlight"></div>
+                                <div class="wheel-scroll" id="runSecScroll" tabindex="0" role="listbox" aria-label="ثانیهٔ دویدن"></div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="unit">ثانیه</div>
+                    <div class="wheel-caption">ثانیه&nbsp; : &nbsp;دقیقه</div>
                 </div>
                 <div class="laps-card">
                     <div class="stepper-label">
@@ -732,8 +783,6 @@
     } catch (e) { /* مرورگر پشتیبانی نمی‌کند، مشکلی نیست */ }
 
     // ---------- عناصر DOM: تایمر ----------
-    const walkInput = document.getElementById('walkTime');
-    const runInput = document.getElementById('runTime');
     const lapsInput = document.getElementById('lapsCount');
     const timerDisplay = document.getElementById('timerDisplay');
     const phaseDisplay = document.getElementById('phaseDisplay');
@@ -760,10 +809,6 @@
     const lapDotsEl = document.getElementById('lapDots');
     const lapTextCurrent = document.getElementById('lapTextCurrent');
     const lapTextTotal = document.getElementById('lapTextTotal');
-    const walkMinus = document.getElementById('walkMinus');
-    const walkPlus = document.getElementById('walkPlus');
-    const runMinus = document.getElementById('runMinus');
-    const runPlus = document.getElementById('runPlus');
     const resetSettingsBtn = document.getElementById('resetSettingsBtn');
 
     // ---------- عناصر DOM: کرونومتر ----------
@@ -857,7 +902,12 @@
         try {
             const context = getAudioContext();
             if (!context) return;
-            if (context.state === 'suspended') context.resume();
+            // اگر کانتکست صوتی هنوز فعال نشده (مثلاً چون اسکرول‌کردن با ویل موس به‌تنهایی مجوز پخش صدا نمی‌دهد)،
+            // به‌جای زمان‌بندی صدا برای بعداً (که باعث پخش انبوه و ناگهانی صداهای معوق می‌شود)، فقط تلاش برای فعال‌سازی می‌کنیم و از پخش این صدا صرف‌نظر می‌کنیم.
+            if (context.state !== 'running') {
+                context.resume().catch(() => {});
+                return;
+            }
             const oscillator = context.createOscillator();
             const gainNode = context.createGain();
             oscillator.connect(gainNode);
@@ -876,12 +926,12 @@
         rawBeep(frequency, duration, volume);
     }
 
-    function playHalfSound() { playBeep(700, 160, 0.32); }
-    function playThreeQuarterSound() { playBeep(850, 120, 0.35); setTimeout(() => playBeep(1050, 130, 0.35), 160); }
-    function playCountdownBeep() { playBeep(950, 150, 0.45); }
-    function playPhaseChangeSound() { playBeep(650, 90, 0.4); setTimeout(() => playBeep(1300, 320, 0.55), 110); }
-    function playLapCompleteSound() { playBeep(650, 90, 0.4); setTimeout(() => playBeep(1300, 220, 0.5), 110); setTimeout(() => playBeep(1500, 260, 0.55), 340); }
-    function playFinishSound() { playBeep(1000, 300, 0.5); setTimeout(() => playBeep(1200, 300, 0.5), 400); setTimeout(() => playBeep(1400, 400, 0.6), 800); }
+    function playHalfSound() { playBeep(700, 160, 0.40); }
+    function playThreeQuarterSound() { playBeep(850, 120, 0.43); setTimeout(() => playBeep(1050, 130, 0.43), 160); }
+    function playCountdownBeep() { playBeep(950, 150, 0.53); }
+    function playPhaseChangeSound() { playBeep(650, 90, 0.48); setTimeout(() => playBeep(1300, 320, 0.63), 110); }
+    function playLapCompleteSound() { playBeep(650, 90, 0.48); setTimeout(() => playBeep(1300, 220, 0.58), 110); setTimeout(() => playBeep(1500, 260, 0.63), 340); }
+    function playFinishSound() { playBeep(1000, 300, 0.58); setTimeout(() => playBeep(1200, 300, 0.58), 400); setTimeout(() => playBeep(1400, 400, 0.68), 800); }
     // صدای کلیک دکمه‌ها؛ جدا از صدای تمرین، با کلید «صدای دکمه‌ها» کنترل می‌شود
     function playButtonClick() {
         if (!state.settings.clickSoundOn) return;
@@ -930,28 +980,110 @@
         try { localStorage.setItem('intervalTimerSettings', JSON.stringify(state.settings)); } catch (e) {}
     }
 
-    // ---------- آخرین مقادیر تنظیم‌شده (زمان راه‌رفتن/دویدن/تعداد دور) ----------
+    // ---------- آخرین مقادیر تنظیم‌شده (زمان راه‌رفتن/دویدن/تعداد دور/واحد) ----------
     const CONFIG_KEY = 'intervalTimerLastConfig';
+
+    // ---------- چرخ‌های انتخاب زمان (دقیقه/ثانیه) ----------
+    const WHEEL_ITEM_H = 32;
+    const WHEEL_MINUTES = Array.from({ length: 60 }, (_, i) => i);       // ۰ تا ۵۹ دقیقه
+    const WHEEL_SECONDS = Array.from({ length: 12 }, (_, i) => i * 5);   // ۰، ۵، ۱۰ ... ۵۵ ثانیه (گام ۵ ثانیه‌ای)
+
+    function pad2(n) { return String(n).padStart(2, '0'); }
+
+    // صدای تیک هنگام عبور از هر عدد؛ مثل چرخ‌های انتخاب زمان گوشی
+    function playWheelTick() {
+        if (!state.settings.clickSoundOn) return;
+        rawBeep(560, 35, 0.16);
+    }
+
+    function createWheelPicker(scrollEl, values) {
+        scrollEl.innerHTML = '';
+        scrollEl.style.paddingTop = WHEEL_ITEM_H + 'px';
+        scrollEl.style.paddingBottom = WHEEL_ITEM_H + 'px';
+        values.forEach((v) => {
+            const item = document.createElement('div');
+            item.className = 'wheel-item';
+            item.textContent = pad2(v);
+            scrollEl.appendChild(item);
+        });
+        const items = Array.from(scrollEl.children);
+        let index = 0;
+        let settleTimer = null;
+
+        function clampIndex(i) { return Math.max(0, Math.min(values.length - 1, i)); }
+        function indexFromScroll() { return clampIndex(Math.round(scrollEl.scrollTop / WHEEL_ITEM_H)); }
+        function setActive(i) { items.forEach((el, k) => el.classList.toggle('is-active', k === i)); }
+
+        scrollEl.addEventListener('scroll', () => {
+            const i = indexFromScroll();
+            if (i !== index) { index = i; setActive(i); playWheelTick(); }
+            clearTimeout(settleTimer);
+            settleTimer = setTimeout(() => { saveLastConfig(); }, 140);
+        });
+        scrollEl.addEventListener('click', (e) => {
+            const item = e.target.closest('.wheel-item');
+            if (!item) return;
+            const i = items.indexOf(item);
+            if (i === -1) return;
+            scrollEl.scrollTo({ top: i * WHEEL_ITEM_H, behavior: 'smooth' });
+        });
+        scrollEl.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowUp') { e.preventDefault(); scrollEl.scrollTo({ top: clampIndex(index + 1) * WHEEL_ITEM_H, behavior: 'smooth' }); }
+            else if (e.key === 'ArrowDown') { e.preventDefault(); scrollEl.scrollTo({ top: clampIndex(index - 1) * WHEEL_ITEM_H, behavior: 'smooth' }); }
+        });
+
+        return {
+            set(v, animate) {
+                const i = clampIndex(values.indexOf(v) === -1 ? 0 : values.indexOf(v));
+                index = i;
+                setActive(i);
+                scrollEl.scrollTo({ top: i * WHEEL_ITEM_H, behavior: animate ? 'smooth' : 'auto' });
+            },
+            get() { return values[index]; }
+        };
+    }
+
+    const walkMinWheel = createWheelPicker(document.getElementById('walkMinScroll'), WHEEL_MINUTES);
+    const walkSecWheel = createWheelPicker(document.getElementById('walkSecScroll'), WHEEL_SECONDS);
+    const runMinWheel = createWheelPicker(document.getElementById('runMinScroll'), WHEEL_MINUTES);
+    const runSecWheel = createWheelPicker(document.getElementById('runSecScroll'), WHEEL_SECONDS);
+
+    // خواندن مقدار کل به ثانیه از روی چرخ‌های دقیقه/ثانیهٔ هر بخش (راه‌رفتن یا دویدن)
+    function getWheelSeconds(which) {
+        if (which === 'walk') return walkMinWheel.get() * 60 + walkSecWheel.get();
+        return runMinWheel.get() * 60 + runSecWheel.get();
+    }
+    // تنظیم چرخ‌های دقیقه/ثانیه بر اساس یک مقدار کل ثانیه (مثلاً هنگام بارگذاری تنظیمات قبلی)
+    function setWheelsFromSeconds(which, totalSeconds) {
+        const total = Math.max(0, Math.round(totalSeconds));
+        const mins = Math.floor(total / 60);
+        let secs = Math.round((total % 60) / 5) * 5;
+        let finalMins = mins;
+        if (secs >= 60) { secs = 0; finalMins += 1; }
+        if (which === 'walk') { walkMinWheel.set(finalMins); walkSecWheel.set(secs); }
+        else { runMinWheel.set(finalMins); runSecWheel.set(secs); }
+    }
+
     function loadLastConfig() {
         try { return JSON.parse(localStorage.getItem(CONFIG_KEY) || '{}'); } catch (e) { return {}; }
     }
     function saveLastConfig() {
         try {
-            const walk = parseInt(walkInput.value, 10);
-            const run = parseInt(runInput.value, 10);
+            const walk = getWheelSeconds('walk');
+            const run = getWheelSeconds('run');
             const laps = parseInt(lapsInput.value, 10);
             localStorage.setItem(CONFIG_KEY, JSON.stringify({
-                walk: (!isNaN(walk) && walk > 0) ? walk : state.walkSeconds,
-                run: (!isNaN(run) && run > 0) ? run : state.runSeconds,
+                walk: (walk && walk > 0) ? walk : state.walkSeconds,
+                run: (run && run > 0) ? run : state.runSeconds,
                 laps: (!isNaN(laps) && laps > 0) ? laps : state.totalLaps
             }));
         } catch (e) {}
     }
     function applyLastConfig() {
         const cfg = loadLastConfig();
-        if (cfg.walk > 0) walkInput.value = cfg.walk;
-        if (cfg.run > 0) runInput.value = cfg.run;
         if (cfg.laps > 0) lapsInput.value = cfg.laps;
+        setWheelsFromSeconds('walk', cfg.walk > 0 ? cfg.walk : state.walkSeconds);
+        setWheelsFromSeconds('run', cfg.run > 0 ? cfg.run : state.runSeconds);
     }
 
     // ---------- تاریخچه ----------
@@ -1221,11 +1353,11 @@
         if (context && context.state === 'suspended') context.resume();
 
         if (state.phase === 'idle') {
-            const walk = parseInt(walkInput.value, 10);
-            const run = parseInt(runInput.value, 10);
+            const walk = getWheelSeconds('walk');
+            const run = getWheelSeconds('run');
             const laps = parseInt(lapsInput.value, 10);
-            if (isNaN(walk) || walk < 1) { showToast('زمان راه رفتن باید حداقل ۱ ثانیه باشد', 'error'); return; }
-            if (isNaN(run) || run < 1) { showToast('زمان دویدن باید حداقل ۱ ثانیه باشد', 'error'); return; }
+            if (!walk || walk < 1) { showToast('زمان راه رفتن باید حداقل ۱ ثانیه باشد', 'error'); return; }
+            if (!run || run < 1) { showToast('زمان دویدن باید حداقل ۱ ثانیه باشد', 'error'); return; }
             if (isNaN(laps) || laps < 1) { showToast('تعداد دورها باید حداقل ۱ باشد', 'error'); return; }
             state.walkSeconds = walk;
             state.runSeconds = run;
@@ -1253,11 +1385,11 @@
         releaseWakeLock();
         stopKeepAliveAudio();
 
-        const walk = parseInt(walkInput.value, 10);
-        const run = parseInt(runInput.value, 10);
+        const walk = getWheelSeconds('walk');
+        const run = getWheelSeconds('run');
         const laps = parseInt(lapsInput.value, 10);
-        if (!isNaN(walk) && walk > 0) state.walkSeconds = walk;
-        if (!isNaN(run) && run > 0) state.runSeconds = run;
+        if (walk && walk > 0) state.walkSeconds = walk;
+        if (run && run > 0) state.runSeconds = run;
         if (!isNaN(laps) && laps > 0) state.totalLaps = laps;
         saveLastConfig();
 
@@ -1305,13 +1437,6 @@
         updateUI();
     }
 
-    function stepNumberInput(input, delta, min) {
-        let v = parseInt(input.value, 10);
-        if (isNaN(v)) v = min;
-        v = Math.max(min, v + delta);
-        input.value = v;
-    }
-
     lapsInput.addEventListener('change', () => {
         if (state.phase === 'idle' || state.phase === 'finished') return;
         let v = parseInt(lapsInput.value, 10);
@@ -1333,10 +1458,6 @@
     addLapBtn.addEventListener('click', addLap);
     minusLapBtn.addEventListener('click', removeLap);
     notifPermissionBtn.addEventListener('click', requestNotificationPermission);
-    walkMinus.addEventListener('click', () => { stepNumberInput(walkInput, -5, 1); saveLastConfig(); });
-    walkPlus.addEventListener('click', () => { stepNumberInput(walkInput, 5, 1); saveLastConfig(); });
-    runMinus.addEventListener('click', () => { stepNumberInput(runInput, -5, 1); saveLastConfig(); });
-    runPlus.addEventListener('click', () => { stepNumberInput(runInput, 5, 1); saveLastConfig(); });
 
     soundToggle.checked = state.settings.soundOn;
     clickSoundToggle.checked = state.settings.clickSoundOn;
@@ -1359,9 +1480,6 @@
 
     // اعمال آخرین مقادیر ذخیره‌شده روی ورودی‌ها پیش از مقداردهی اولیه وضعیت
     applyLastConfig();
-
-    walkInput.addEventListener('change', saveLastConfig);
-    runInput.addEventListener('change', saveLastConfig);
 
     resetSettingsBtn.addEventListener('click', () => {
         state.settings = Object.assign({}, DEFAULT_SETTINGS);
@@ -1590,10 +1708,14 @@
         showToast('مرورگر شما نصب مستقیم را پشتیبانی نمی‌کند. از منوی مرورگر «افزودن به صفحه اصلی» را انتخاب کنید.', 'default');
     });
 
-    document.addEventListener('click', function () {
-        const context = getAudioContext();
-        if (context && context.state === 'suspended') context.resume();
-    }, { once: false });
+    // تلاش برای فعال‌سازی زودهنگام صدا با هر نوع تعامل کاربر (کلیک، لمس، کیبورد، اسکرول با ویل موس روی چرخ‌ها)
+    // تا وقتی کاربر شروع به اسکرول‌کردن چرخ‌های زمان می‌کند، صدا از قبل آماده باشد.
+    ['click', 'pointerdown', 'touchstart', 'keydown', 'wheel'].forEach(function (evt) {
+        document.addEventListener(evt, function () {
+            const context = getAudioContext();
+            if (context && context.state === 'suspended') context.resume().catch(() => {});
+        }, { passive: true });
+    });
 
     document.addEventListener('visibilitychange', async function () {
         if (document.visibilityState === 'visible') {
