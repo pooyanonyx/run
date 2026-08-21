@@ -917,6 +917,30 @@
         try { localStorage.setItem('intervalTimerSettings', JSON.stringify(state.settings)); } catch (e) {}
     }
 
+    // ---------- آخرین مقادیر تنظیم‌شده (زمان راه‌رفتن/دویدن/تعداد دور) ----------
+    const CONFIG_KEY = 'intervalTimerLastConfig';
+    function loadLastConfig() {
+        try { return JSON.parse(localStorage.getItem(CONFIG_KEY) || '{}'); } catch (e) { return {}; }
+    }
+    function saveLastConfig() {
+        try {
+            const walk = parseInt(walkInput.value, 10);
+            const run = parseInt(runInput.value, 10);
+            const laps = parseInt(lapsInput.value, 10);
+            localStorage.setItem(CONFIG_KEY, JSON.stringify({
+                walk: (!isNaN(walk) && walk > 0) ? walk : state.walkSeconds,
+                run: (!isNaN(run) && run > 0) ? run : state.runSeconds,
+                laps: (!isNaN(laps) && laps > 0) ? laps : state.totalLaps
+            }));
+        } catch (e) {}
+    }
+    function applyLastConfig() {
+        const cfg = loadLastConfig();
+        if (cfg.walk > 0) walkInput.value = cfg.walk;
+        if (cfg.run > 0) runInput.value = cfg.run;
+        if (cfg.laps > 0) lapsInput.value = cfg.laps;
+    }
+
     // ---------- تاریخچه ----------
     const HISTORY_KEY = 'intervalTimerHistory';
     function loadHistory() {
@@ -1194,6 +1218,7 @@
             state.runSeconds = run;
             state.totalLaps = laps;
             state.currentLap = 1;
+            saveLastConfig();
             startPhase('walk');
             sendNotification('🏃 تایمر شروع شد!', `دور ۱ از ${laps} | راه رفتن ${walk} ثانیه`, 'start');
         } else {
@@ -1221,6 +1246,7 @@
         if (!isNaN(walk) && walk > 0) state.walkSeconds = walk;
         if (!isNaN(run) && run > 0) state.runSeconds = run;
         if (!isNaN(laps) && laps > 0) state.totalLaps = laps;
+        saveLastConfig();
 
         state.phase = 'idle';
         state.currentLap = 0;
@@ -1245,6 +1271,7 @@
         currentLaps += 1;
         lapsInput.value = currentLaps;
         state.totalLaps = currentLaps;
+        saveLastConfig();
 
         addLapBtn.style.transform = 'scale(1.15)';
         setTimeout(() => { addLapBtn.style.transform = 'scale(1)'; }, 200);
@@ -1261,6 +1288,7 @@
         if (v < state.currentLap) { showToast('تعداد دور نمی‌تواند کمتر از دور جاری باشد.', 'error'); return; }
         lapsInput.value = v;
         state.totalLaps = v;
+        saveLastConfig();
         updateUI();
     }
 
@@ -1281,6 +1309,7 @@
             return;
         }
         state.totalLaps = v;
+        saveLastConfig();
         updateUI();
     });
 
@@ -1291,10 +1320,10 @@
     addLapBtn.addEventListener('click', addLap);
     minusLapBtn.addEventListener('click', removeLap);
     notifPermissionBtn.addEventListener('click', requestNotificationPermission);
-    walkMinus.addEventListener('click', () => stepNumberInput(walkInput, -5, 1));
-    walkPlus.addEventListener('click', () => stepNumberInput(walkInput, 5, 1));
-    runMinus.addEventListener('click', () => stepNumberInput(runInput, -5, 1));
-    runPlus.addEventListener('click', () => stepNumberInput(runInput, 5, 1));
+    walkMinus.addEventListener('click', () => { stepNumberInput(walkInput, -5, 1); saveLastConfig(); });
+    walkPlus.addEventListener('click', () => { stepNumberInput(walkInput, 5, 1); saveLastConfig(); });
+    runMinus.addEventListener('click', () => { stepNumberInput(runInput, -5, 1); saveLastConfig(); });
+    runPlus.addEventListener('click', () => { stepNumberInput(runInput, 5, 1); saveLastConfig(); });
 
     soundToggle.checked = state.settings.soundOn;
     clickSoundToggle.checked = state.settings.clickSoundOn;
@@ -1314,6 +1343,12 @@
         if (state.settings.keepAwake && state.isRunning) requestWakeLock();
         else releaseWakeLock();
     });
+
+    // اعمال آخرین مقادیر ذخیره‌شده روی ورودی‌ها پیش از مقداردهی اولیه وضعیت
+    applyLastConfig();
+
+    walkInput.addEventListener('change', saveLastConfig);
+    runInput.addEventListener('change', saveLastConfig);
 
     resetSettingsBtn.addEventListener('click', () => {
         state.settings = Object.assign({}, DEFAULT_SETTINGS);
