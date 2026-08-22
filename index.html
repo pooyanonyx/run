@@ -227,6 +227,7 @@
         color:var(--ink-3); scroll-snap-align:center; transition:color 0.15s; user-select:none; cursor:pointer;
     }
     .wheel-scroll .wheel-item.is-active{ color:var(--ink-1); font-size:1.16rem; }
+    .wheel-scroll.is-disabled{ touch-action:none; }
     .wheel-colon{ font-size:1.1rem; font-weight:800; color:var(--ink-2); align-self:center; flex-shrink:0; }
     .wheel-caption{ font-size:0.64rem; color:var(--ink-3); font-weight:500; text-align:center; margin-top:7px; letter-spacing:0.2px; }
 
@@ -996,10 +997,30 @@
         rawBeep(560, 35, 0.16);
     }
 
-    function createWheelPicker(scrollEl, values) {
+    // انیمیشن محو شدن با جاوااسکریپت (مستقل از CSS transition)، تا حتی اگر تنظیمات
+    // «کاهش حرکت» سیستم‌عامل انیمیشن‌های CSS را غیرفعال کرده باشد، باز هم اجرا شود.
+    function animateOpacity(el, from, to, duration) {
+        if (el._opacityAnimFrame) cancelAnimationFrame(el._opacityAnimFrame);
+        const start = performance.now();
+        function step(now) {
+            const t = Math.min(1, (now - start) / duration);
+            const eased = 1 - Math.pow(1 - t, 2); // ease-out
+            const value = from + (to - from) * eased;
+            el.style.opacity = value.toFixed(3);
+            if (t < 1) {
+                el._opacityAnimFrame = requestAnimationFrame(step);
+            } else {
+                el._opacityAnimFrame = null;
+            }
+        }
+        el._opacityAnimFrame = requestAnimationFrame(step);
+    }
+
+    function createWheelPicker(scrollEl, values, onChange) {
         scrollEl.innerHTML = '';
         scrollEl.style.paddingTop = WHEEL_ITEM_H + 'px';
         scrollEl.style.paddingBottom = WHEEL_ITEM_H + 'px';
+        scrollEl.style.opacity = '1';
         values.forEach((v) => {
             const item = document.createElement('div');
             item.className = 'wheel-item';
@@ -1009,18 +1030,26 @@
         const items = Array.from(scrollEl.children);
         let index = 0;
         let settleTimer = null;
+        let disabled = false;
 
         function clampIndex(i) { return Math.max(0, Math.min(values.length - 1, i)); }
         function indexFromScroll() { return clampIndex(Math.round(scrollEl.scrollTop / WHEEL_ITEM_H)); }
         function setActive(i) { items.forEach((el, k) => el.classList.toggle('is-active', k === i)); }
 
         scrollEl.addEventListener('scroll', () => {
+            if (disabled) return;
             const i = indexFromScroll();
-            if (i !== index) { index = i; setActive(i); playWheelTick(); }
+            if (i !== index) {
+                index = i;
+                setActive(i);
+                playWheelTick();
+                if (typeof onChange === 'function') onChange();
+            }
             clearTimeout(settleTimer);
             settleTimer = setTimeout(() => { saveLastConfig(); }, 140);
         });
         scrollEl.addEventListener('click', (e) => {
+            if (disabled) return;
             const item = e.target.closest('.wheel-item');
             if (!item) return;
             const i = items.indexOf(item);
@@ -1028,6 +1057,7 @@
             scrollEl.scrollTo({ top: i * WHEEL_ITEM_H, behavior: 'smooth' });
         });
         scrollEl.addEventListener('keydown', (e) => {
+            if (disabled) return;
             if (e.key === 'ArrowUp') { e.preventDefault(); scrollEl.scrollTo({ top: clampIndex(index + 1) * WHEEL_ITEM_H, behavior: 'smooth' }); }
             else if (e.key === 'ArrowDown') { e.preventDefault(); scrollEl.scrollTo({ top: clampIndex(index - 1) * WHEEL_ITEM_H, behavior: 'smooth' }); }
         });
@@ -1039,14 +1069,32 @@
                 setActive(i);
                 scrollEl.scrollTo({ top: i * WHEEL_ITEM_H, behavior: animate ? 'smooth' : 'auto' });
             },
-            get() { return values[index]; }
+            get() { return values[index]; },
+            disable() {
+                disabled = true;
+                scrollEl.classList.add('is-disabled');
+                scrollEl.setAttribute('tabindex', '-1');
+                scrollEl.setAttribute('aria-disabled', 'true');
+                animateOpacity(scrollEl, parseFloat(getComputedStyle(scrollEl).opacity) || 1, 0.32, 500);
+            },
+            enable() {
+                disabled = false;
+                scrollEl.classList.remove('is-disabled');
+                scrollEl.setAttribute('tabindex', '0');
+                scrollEl.removeAttribute('aria-disabled');
+                animateOpacity(scrollEl, parseFloat(getComputedStyle(scrollEl).opacity) || 0.32, 1, 500);
+            }
         };
     }
 
-    const walkMinWheel = createWheelPicker(document.getElementById('walkMinScroll'), WHEEL_MINUTES);
-    const walkSecWheel = createWheelPicker(document.getElementById('walkSecScroll'), WHEEL_SECONDS);
-    const runMinWheel = createWheelPicker(document.getElementById('runMinScroll'), WHEEL_MINUTES);
-    const runSecWheel = createWheelPicker(document.getElementById('runSecScroll'), WHEEL_SECONDS);
+    const walkMinWheel = createWheelPicker(document.getElementById('walkMinScroll'), WHEEL_MINUTES, () => syncIdlePreview());
+    const walkSecWheel = createWheelPicker(document.getElementById('walkSecScroll'), WHEEL_SECONDS, () => syncIdlePreview());
+    const runMinWheel = createWheelPicker(document.getElementById('runMinScroll'), WHEEL_MINUTES, () => syncIdlePreview());
+    const runSecWheel = createWheelPicker(document.getElementById('runSecScroll'), WHEEL_SECONDS, () => syncIdlePreview());
+    const allWheels = [walkMinWheel, walkSecWheel, runMinWheel, runSecWheel];
+    function setWheelsEnabled(enabled) {
+        allWheels.forEach((w) => enabled ? w.enable() : w.disable());
+    }
 
     // خواندن مقدار کل به ثانیه از روی چرخ‌های دقیقه/ثانیهٔ هر بخش (راه‌رفتن یا دویدن)
     function getWheelSeconds(which) {
@@ -1305,6 +1353,18 @@
         lapDotsEl.innerHTML = html;
     }
 
+    // هماهنگ‌کردن پیش‌نمایش زمان کل و نوار پیشرفت با مقدار فعلی وییل‌ها/تعداد دور، فقط پیش از شروع (حالت آماده)
+    function syncIdlePreview() {
+        if (state.phase !== 'idle') return;
+        const walk = getWheelSeconds('walk');
+        const run = getWheelSeconds('run');
+        const laps = parseInt(lapsInput.value, 10);
+        if (walk > 0) state.walkSeconds = walk;
+        if (run > 0) state.runSeconds = run;
+        if (!isNaN(laps) && laps > 0) state.totalLaps = laps;
+        updateUI();
+    }
+
     function updateUI() {
         timerDisplay.textContent = formatTime(state.timeLeft);
         currentLapDisplay.textContent = state.currentLap;
@@ -1373,6 +1433,7 @@
         state.isRunning = true;
         requestWakeLock();
         startKeepAliveAudio();
+        setWheelsEnabled(false);
 
         if (state.tickInterval) clearInterval(state.tickInterval);
         state.tickInterval = setInterval(tick, 250);
@@ -1384,6 +1445,7 @@
         state.isRunning = false;
         releaseWakeLock();
         stopKeepAliveAudio();
+        setWheelsEnabled(true);
 
         const walk = getWheelSeconds('walk');
         const run = getWheelSeconds('run');
@@ -1401,6 +1463,7 @@
 
         timerDisplay.classList.remove('timer-warning');
         updateUI();
+        syncIdlePreview();
     }
 
     function pauseTimer() {
@@ -1438,9 +1501,15 @@
     }
 
     lapsInput.addEventListener('change', () => {
-        if (state.phase === 'idle' || state.phase === 'finished') return;
+        if (state.phase === 'finished') return;
         let v = parseInt(lapsInput.value, 10);
         if (isNaN(v) || v < 1) { lapsInput.value = state.totalLaps; return; }
+        if (state.phase === 'idle') {
+            state.totalLaps = v;
+            saveLastConfig();
+            syncIdlePreview();
+            return;
+        }
         if (v < state.currentLap) {
             showToast('تعداد دور نمی‌تواند کمتر از دور جاری باشد.', 'error');
             lapsInput.value = state.totalLaps;
@@ -1480,6 +1549,7 @@
 
     // اعمال آخرین مقادیر ذخیره‌شده روی ورودی‌ها پیش از مقداردهی اولیه وضعیت
     applyLastConfig();
+    syncIdlePreview();
 
     resetSettingsBtn.addEventListener('click', () => {
         state.settings = Object.assign({}, DEFAULT_SETTINGS);
